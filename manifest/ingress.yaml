@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ing-heg-sandbox-app
+  namespace: default
+  annotations:
+    alb.ingress.kubernetes.io/group.name: ing-heg-sandbox
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/load-balancer-name: alb-heg-sandbox-ingress
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/security-groups: sg-029ecfa2553e7391d # 변경
+    alb.ingress.kubernetes.io/manage-backend-security-group-rules: 'false'
+    alb.ingress.kubernetes.io/tags: Name=alb-heg-sandbox-app
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '10'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthcheck-success-codes: '200'
+    alb.ingress.kubernetes.io/healthcheck-unhealthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/healthcheck-healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/healthcheck-port: 'traffic-port'
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:026090540647:certificate/c04e1f1c-0315-4321-bf3f-02a5a730f299 # 변경
+spec:
+  ingressClassName: alb
+  rules:
+    - host: sandbox.ezwelesp.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: nginx-svc
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

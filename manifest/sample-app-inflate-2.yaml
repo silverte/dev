@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inflate-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inflate-2
+  template:
+    metadata:
+      labels:
+        app: inflate-2
+    spec:
+      # nodeSelector:
+      #   intent: apps
+      containers:
+        - name: inflate
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.2
+          resources:
+            requests:
+              cpu: 1
+              memory: 1.5Gi
+            limits:
+              cpu: 1
+              memory: 1.5Gi

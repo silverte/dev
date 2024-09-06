@@ -1,0 +1,247 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: np-heg-sandbox
+spec:
+  # Template section that describes how to template out NodeClaim resources that Karpenter will provision
+  # Karpenter will consider this template to be the minimum requirements needed to provision a Node using this NodePool
+  # It will overlay this NodePool with Pods that need to schedule to further constrain the NodeClaims
+  # Karpenter will provision to launch new Nodes for the cluster
+  template:
+    metadata:
+      # Labels are arbitrary key-values that are applied to all nodes
+      # labels:
+      #   billing-team: 'my-team'
+
+      # Annotations are arbitrary key-values that are applied to all nodes
+      # annotations:
+      #   example.com/owner: 'my-team'
+    spec:
+      # References the Cloud Provider's NodeClass resource, see your cloud provider specific documentation
+      nodeClassRef:
+        group: karpenter.k8s.aws # Updated since only a single version will be served
+        kind: EC2NodeClass
+        name: nc-heg-sandbox
+
+      # Provisioned nodes will have these taints
+      # Taints may prevent pods from scheduling if they are not tolerated by the pod.
+      # taints:
+      #   - key: AppOnly
+      #     effect: NoSchedule
+
+      # Provisioned nodes will have these taints, but pods do not need to tolerate these taints to be provisioned by this
+      # NodePool. These taints are expected to be temporary and some other entity (e.g. a DaemonSet) is responsible for
+      # removing the taint after it has finished initializing the node.
+      # startupTaints:
+      #   - key: example.com/another-taint
+      #     effect: NoSchedule
+
+      # The amount of time a Node can live on the cluster before being removed
+      # Avoiding long-running Nodes helps to reduce security vulnerabilities as well as to reduce the chance of issues that can plague Nodes with long uptimes such as file fragmentation or memory leaks from system processes
+      # You can choose to disable expiration entirely by setting the string value 'Never' here
+
+      # Note: changing this value in the nodepool will drift the nodeclaims.
+      expireAfter: 720h
+
+      # The amount of time that a node can be draining before it's forcibly deleted. A node begins draining when a delete call is made against it, starting
+      # its finalization flow. Pods with TerminationGracePeriodSeconds will be deleted preemptively before this terminationGracePeriod ends to give as much time to cleanup as possible.
+      # If your pod's terminationGracePeriodSeconds is larger than this terminationGracePeriod, Karpenter may forcibly delete the pod
+      # before it has its full terminationGracePeriod to cleanup.
+
+      # Note: changing this value in the nodepool will drift the nodeclaims.
+      terminationGracePeriod: 300s
+
+      # Requirements that constrain the parameters of provisioned nodes.
+      # These requirements are combined with pod.spec.topologySpreadConstraints, pod.spec.affinity.nodeAffinity, pod.spec.affinity.podAffinity, and pod.spec.nodeSelector rules.
+      # Operators { In, NotIn, Exists, DoesNotExist, Gt, and Lt } are supported.
+      # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#operators
+      requirements:
+        - key: 'karpenter.k8s.aws/instance-category'
+          operator: In
+          values: ['c', 'm', 'r']
+          # # minValues here enforces the scheduler to consider at least that number of unique instance-category to schedule the pods.
+          # # This field is ALPHA and can be dropped or replaced at any time
+          # minValues: 2
+        # - key: 'karpenter.k8s.aws/instance-family'
+        #   operator: In
+        #   values: ['m5', 'm5d', 'c5', 'c5d', 'c4', 'r4']
+        #   minValues: 5
+        # - key: 'karpenter.k8s.aws/instance-cpu'
+        #   operator: In
+        #   values: ['2', '4', '8', '16', '32']
+        - key: 'karpenter.k8s.aws/instance-hypervisor'
+          operator: In
+          values: ['nitro']
+        - key: 'karpenter.k8s.aws/instance-generation'
+          operator: Gt
+          values: ['2']
+        - key: 'topology.kubernetes.io/zone'
+          operator: In
+          values: ['ap-northeast-2a']
+        - key: 'kubernetes.io/arch'
+          operator: In
+          values: ['arm64', 'amd64']
+        - key: 'karpenter.sh/capacity-type'
+          operator: In
+          values: ['spot', 'on-demand']
+
+  # Disruption section which describes the ways in which Karpenter can disrupt and replace Nodes
+  # Configuration in this section constrains how aggressive Karpenter can be with performing operations
+  # like rolling Nodes due to them hitting their maximum lifetime (expiry) or scaling down nodes to reduce cluster cost
+  disruption:
+    # Describes which types of Nodes Karpenter should consider for consolidation
+    # If using 'WhenEmptyOrUnderutilized', Karpenter will consider all nodes for consolidation and attempt to remove or replace Nodes when it discovers that the Node is empty or underutilized and could be changed to reduce cost
+    # If using `WhenEmpty`, Karpenter will only consider nodes for consolidation that contain no workload pods
+    consolidationPolicy: WhenEmptyOrUnderutilized
+
+    # The amount of time Karpenter should wait to consolidate a node after a pod has been added or removed from the node.
+    # You can choose to disable consolidation entirely by setting the string value 'Never' here
+    consolidateAfter: 1m # Added to allow additional control over consolidation aggressiveness
+
+    # Budgets control the speed Karpenter can scale down nodes.
+    # Karpenter will respect the minimum of the currently active budgets, and will round up
+    # when considering percentages. Duration and Schedule must be set together.
+    # budgets:
+    #   - nodes: 10%
+    #   # On Weekdays during business hours, don't do any deprovisioning.
+    #   - schedule: '0 9 * * mon-fri'
+    #     duration: 8h
+    #     nodes: '0'
+
+  # Resource limits constrain the total size of the pool.
+  # Limits prevent Karpenter from creating new instances once the limit is exceeded.
+  limits:
+    cpu: '1000'
+    memory: 1000Gi
+
+  # Priority given to the NodePool when the scheduler considers which NodePool
+  # to select. Higher weights indicate higher priority when comparing NodePools.
+  # Specifying no weight is equivalent to specifying a weight of 0.
+  # weight: 10
+
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: nc-heg-sandbox
+spec:
+  # kubelet:
+  #   podsPerCore: 2
+  #   maxPods: 20
+  #   systemReserved:
+  #       cpu: 100m
+  #       memory: 100Mi
+  #       ephemeral-storage: 1Gi
+  #   kubeReserved:
+  #       cpu: 200m
+  #       memory: 100Mi
+  #       ephemeral-storage: 3Gi
+  #   evictionHard:
+  #       memory.available: 5%
+  #       nodefs.available: 10%
+  #       nodefs.inodesFree: 10%
+  #   evictionSoft:
+  #       memory.available: 500Mi
+  #       nodefs.available: 15%
+  #       nodefs.inodesFree: 15%
+  #   evictionSoftGracePeriod:
+  #       memory.available: 1m
+  #       nodefs.available: 1m30s
+  #       nodefs.inodesFree: 2m
+  #   evictionMaxPodGracePeriod: 60
+  #   imageGCHighThresholdPercent: 85
+  #   imageGCLowThresholdPercent: 80
+  #   cpuCFSQuota: true
+  #   clusterDNS: ["10.0.1.100"]
+  # Required, resolves a default ami and userdata
+  # amiFamily: AL2
+
+  # Required, discovers subnets to attach to instances
+  # Each term in the array of subnetSelectorTerms is ORed together
+  # Within a single term, all conditions are ANDed
+  subnetSelectorTerms:
+    # Select on any subnet that has the "karpenter.sh/discovery: eks-ezwel-sandbox"
+    # AND the "environment: test" tag OR any subnet with ID "subnet-09fa4a0a8f233a921"
+    - tags:
+        karpenter.sh/discovery: 'eks-heg-sandbox'
+        environment: 'sandbox'
+    # - id: subnet-09fa4a0a8f233a921
+
+  # Required, discovers security groups to attach to instances
+  # Each term in the array of securityGroupSelectorTerms is ORed together
+  # Within a single term, all conditions are ANDed
+  securityGroupSelectorTerms:
+    # Select on any security group that has both the "karpenter.sh/discovery: eks-ezwel-sandbox" tag
+    # AND the "environment: test" tag OR any security group with the "my-security-group" name
+    # OR any security group with ID "sg-063d7acfb4b06c82c"
+    - tags:
+        karpenter.sh/discovery: 'eks-heg-sandbox'
+        environment: 'sandbox'
+    # - name: my-security-group
+    # - id: sg-063d7acfb4b06c82c
+
+  # Optional, IAM role to use for the node identity.
+  # The "role" field is immutable after EC2NodeClass creation. This may change in the
+  # future, but this restriction is currently in place today to ensure that Karpenter
+  # avoids leaking managed instance profiles in your account.
+  # Must specify one of "role" or "instanceProfile" for Karpenter to launch nodes
+  role: 'KarpenterNodeRole-eks-heg-sandbox'
+
+  # Optional, IAM instance profile to use for the node identity.
+  # Must specify one of "role" or "instanceProfile" for Karpenter to launch nodes
+  # instanceProfile: 'KarpenterNodeInstanceProfile-eks-ezwel-sandbox'
+
+  amiFamily: AL2023
+  # Each term in the array of amiSelectorTerms is ORed together
+  # Within a single term, all conditions are ANDed
+  amiSelectorTerms:
+    # Select on any AMI that has both the `karpenter.sh/discovery: eks-ezwel-sandbox`
+    # AND `environment: test` tags OR any AMI with the name `my-ami` OR an AMI with
+    # ID `ami-123`
+    # - tags:
+    #     karpenter.sh/discovery: eks-ezwel-sandbox
+    #     environment: sandbox
+    # - name: my-ami
+    # - id: ami-123
+    # Select EKS optimized AL2023 AMIs with version `v20240807`. This term is mutually
+    # exclusive and can't be specified with other terms.
+    - alias: al2023@v20240807
+
+  # Optional, propagates tags to underlying EC2 resources
+  # tags:
+  #   team: team-a
+  #   app: team-a-app
+
+  # Optional, configures IMDS for the instance
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 1 # This is changed to disable IMDS access from containers not on the host network
+    httpTokens: required
+
+  # Optional, configures storage devices for the instance
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 30Gi
+        volumeType: gp3
+        # iops: 10000
+        encrypted: true
+        # kmsKeyID: '1234abcd-12ab-34cd-56ef-1234567890ab'
+        deleteOnTermination: true
+        # throughput: 125
+        # snapshotID: snap-0123456789
+
+  # Optional, use instance-store volumes for node ephemeral-storage
+  # instanceStorePolicy: RAID0
+
+  # Optional, overrides autogenerated userdata with a merge semantic
+  # userData: |
+  #   echo "Hello world"
+
+  # Optional, configures detailed monitoring for the instance
+  # detailedMonitoring: true
+
+  # Optional, configures if the instance should be launched with an associated public IP address.
+  # If not specified, the default value depends on the subnet's public IP auto-assign setting.
+  # associatePublicIPAddress: true

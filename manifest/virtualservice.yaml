@@ -1,0 +1,14 @@
+kind: VirtualService
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: fleetman-webapp
+  namespace: default
+spec:
+  hosts:      # which incoming host are we applying the proxy rules to???
+    - "*" # Copy the value in the gateway hosts - usually a Domain Name
+  gateways:
+    - ingress-gateway-configuration
+  http:
+    - route:
+        - destination:
+            host: fleetman-webapp

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inflate-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inflate-3
+  template:
+    metadata:
+      labels:
+        app: inflate-3
+    spec:
+      containers:
+        - name: inflate
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.2
+          resources:
+            requests:
+              cpu: 8
+              memory: 8Gi
+            limits:
+              cpu: 8
+              memory: 8Gi
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: eks.amazonaws.com/nodegroup
+                    operator: Exists

@@ -1,0 +1,26 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: sc-efs-heg-sandbox
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-0b389ac9e289fd6ae
+  directoryPerms: '755'
+  ensureUniqueDirectory: 'true'
+  subPathPattern: ${.PVC.namespace}/${.PVC.name}
+  gid: '0'
+  uid: '0'
+  basePath: '/dynamic_provisioning'
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: efs-pvc
+# spec:
+#   accessModes:
+#     - ReadWriteMany
+#   storageClassName: efs-sc
+#   resources:
+#     requests:
+#       storage: 5Gi
