@@ -4,7 +4,7 @@ terraform {
 
   # Configure the S3 backend
   backend "s3" {
-    bucket = "s3-heg-sandbox-terraform-state"
+    bucket = "s3-ezwel-terraform-state"
     key    = "dev/terraform.tfstate"
     region = "us-west-2"
   }
@@ -14,14 +14,14 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.58.0"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = ">= 2.7"
-    }
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = ">= 2.0"
-    }
+    # helm = {
+    #   source  = "hashicorp/helm"
+    #   version = ">= 2.7"
+    # }
+    # kubectl = {
+    #   source  = "alekc/kubectl"
+    #   version = ">= 2.0"
+    # }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6.1"
