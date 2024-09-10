@@ -52,6 +52,9 @@ module "eks" {
       configuration_values = jsonencode({
         env = {
           # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
+          # 관리형 노드 그룹은 maxPods의 값에 최대 수를 적용합니다. vCPU가 30개 미만인 인스턴스의 경우 최대 수는 110이고 
+          # 다른 모든 인스턴스의 경우 최대 수는 250입니다. 이 최대 수는 접두사 위임의 활성화 여부에 관계없이 적용됩니다.
+          # kubectl describe node ip-192-168-30-193.region-code.compute.internal | grep 'pods\|PrivateIPv4Address'
           ENABLE_PREFIX_DELEGATION = "true"
           WARM_PREFIX_TARGET       = "1"
         }

@@ -16,6 +16,8 @@ module "ec2_bastion" {
   vpc_security_group_ids      = [module.security_group_ec2_bastion.security_group_id]
   associate_public_ip_address = true
   disable_api_stop            = false
+  disable_api_termination     = true
+
   # key_name                    = module.key_pair_bastion.key_pair_name
 
   create_iam_instance_profile = true

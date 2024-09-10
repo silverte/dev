@@ -24,7 +24,7 @@ spec:
             limits:
               cpu: 500m
               memory: 1Gi
-      # tolerations:
-      #   - key: 'Critical'
-      #     operator: 'Exists'
-      #     effect: 'NoSchedule'
+      tolerations:
+        - key: 'Critical'
+          operator: 'Exists'
+          effect: 'NoSchedule'

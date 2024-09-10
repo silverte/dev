@@ -16,6 +16,7 @@ module "ec2_nexus" {
   vpc_security_group_ids      = [module.security_group_ec2_nexus.security_group_id]
   associate_public_ip_address = false
   disable_api_stop            = false
+  disable_api_termination     = true
   # key_name                    = module.key_pair_nexus.key_pair_name
 
   # create_iam_instance_profile = true

@@ -8,8 +8,8 @@ module "ecr-app" {
 
   repository_name = "ecr-${var.service}-${var.environment}-${var.ecr_app_name}"
 
-  repository_read_write_access_arns = [data.aws_caller_identity.current.arn]
-  create_lifecycle_policy           = true
+  # repository_read_write_access_arns = [data.aws_caller_identity.current.arn]
+  create_lifecycle_policy = true
   repository_lifecycle_policy = jsonencode({
     rules = [
       {
@@ -28,7 +28,7 @@ module "ecr-app" {
     ]
   })
 
-  repository_force_delete = true
+  repository_force_delete = false
 
   #   # Registry Scanning Configuration
   #   manage_registry_scanning_configuration = true
