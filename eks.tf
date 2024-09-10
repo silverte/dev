@@ -62,14 +62,17 @@ module "eks" {
         enableNetworkPolicy : "true",
       })
     }
-    # aws-ebs-csi-driver = {
-    #   most_recent = true
-    # }
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+    }
     aws-efs-csi-driver = {
-      most_recent = true
+      most_recent              = true
+      service_account_role_arn = module.efs_csi_irsa_role.iam_role_arn
     }
     aws-mountpoint-s3-csi-driver = {
-      most_recent = true
+      most_recent              = true
+      service_account_role_arn = module.mountpoint_s3_csi_irsa_role.iam_role_arn
     }
   }
 
@@ -101,6 +104,13 @@ module "eks" {
 
       lanch_template_name             = "ekslt-${var.environment}-mgmt"
       launch_template_use_name_prefix = false
+      enable_monitoring               = false
+      launch_template_tags = merge(
+        local.tags,
+        {
+          "Name" = "ekslt-${var.service}-${var.environment}-mgmt"
+        }
+      )
 
       min_size     = 1
       max_size     = 2
@@ -120,15 +130,22 @@ module "eks" {
       ami_type        = "AL2023_ARM_64_STANDARD"
       name            = "eksng-${var.environment}-app"
       use_name_prefix = false
-      instance_types  = ["c7g.2xlarge"]
+      instance_types  = ["c7g.large"]
       capacity_type   = "ON_DEMAND"
 
       lanch_template_name             = "ekslt-${var.environment}-app"
       launch_template_use_name_prefix = false
+      enable_monitoring               = false
+      launch_template_tags = merge(
+        local.tags,
+        {
+          "Name" = "ekslt-${var.service}-${var.environment}-app"
+        }
+      )
 
-      min_size     = 0
+      min_size     = 1
       max_size     = 2
-      desired_size = 0
+      desired_size = 1
 
       labels = {
         node_type = "app"
@@ -164,6 +181,47 @@ module "eks" {
       "Name" = "eks-${var.service}-${var.environment}"
     }
   )
+}
+
+module "efs_csi_irsa_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+
+  role_name             = "efs-csi-driver"
+  attach_efs_csi_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
+    }
+  }
+}
+
+module "ebs_csi_irsa_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+
+  role_name             = "ebs-csi-controller"
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+}
+module "mountpoint_s3_csi_irsa_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+
+  role_name                       = "s3-csi-driver"
+  attach_mountpoint_s3_csi_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:s3-csi-driver-sa"]
+    }
+  }
 }
 
 # output "configure_kubectl" {
