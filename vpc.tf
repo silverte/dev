@@ -2,15 +2,18 @@
 module "vpc" {
   source     = "terraform-aws-modules/vpc/aws"
   version    = "5.8.1"
-  create_vpc = var.enable_vpc
+  create_vpc = var.enable_vpc_dev
 
   # Details
-  name            = "vpc-${var.service}-${var.environment}"
-  cidr            = var.cidr
-  azs             = local.azs
-  public_subnets  = var.public_subnets
-  private_subnets = var.private_subnets
-  intra_subnets   = var.infra_subnets
+  name                = "vpc-${var.service}-dev"
+  cidr                = var.cidr_dev
+  azs                 = local.azs
+  public_subnets      = var.public_subnets_dev
+  private_subnets     = var.private_subnets_dev
+  intra_subnets       = var.endpoint_subnets_dev
+  database_subnets    = var.database_subnets_dev
+  elasticache_subnets = var.elb_subnets_dev
+  redshift_subnets    = var.tgw_attach_subnets_dev
 
   manage_default_route_table    = false
   manage_default_network_acl    = false
@@ -18,34 +21,47 @@ module "vpc" {
   manage_default_vpc            = false
 
   # Tag subnets
-  public_subnet_names   = ["sub-${var.service}-${var.environment}-pub-a", "sub-${var.service}-${var.environment}-pub-c"]
-  private_subnet_names  = ["sub-${var.service}-${var.environment}-pri-a", "sub-${var.service}-${var.environment}-pri-c"]
-  database_subnet_names = ["sub-${var.service}-${var.environment}-db-a", "sub-${var.service}-${var.environment}-db-c"]
-  intra_subnet_names    = ["sub-${var.service}-${var.environment}-ep-a", "sub-${var.service}-${var.environment}-ep-c"]
+  public_subnet_names      = ["sub-${var.service}-dev-pub-a", "sub-${var.service}-dev-pub-c"]
+  private_subnet_names     = ["sub-${var.service}-dev-pri-a", "sub-${var.service}-dev-pri-c"]
+  database_subnet_names    = ["sub-${var.service}-dev-db-a", "sub-${var.service}-dev-db-c"]
+  intra_subnet_names       = ["sub-${var.service}-dev-ep-a", "sub-${var.service}-dev-ep-c"]
+  elasticache_subnet_names = ["sub-${var.service}-dev-elb-a", "sub-${var.service}-dev-elb-c"]
+  redshift_subnet_names    = ["sub-${var.service}-dev-tgw-a", "sub-${var.service}-dev-tgw-c"]
+
+  # Routing
+  create_database_subnet_route_table    = true
+  create_elasticache_subnet_route_table = true
+  create_redshift_subnet_route_table    = true
 
   # Tag route table
-  public_route_table_tags   = { "Name" : "route-${var.service}-${var.environment}-pub" }
-  private_route_table_tags  = { "Name" : "route-${var.service}-${var.environment}-pri" }
-  database_route_table_tags = { "Name" : "route-${var.service}-${var.environment}-db" }
-  intra_route_table_tags    = { "Name" : "route-${var.service}-${var.environment}-ep" }
+  public_route_table_tags      = { "Name" : "route-${var.service}-dev-pub" }
+  private_route_table_tags     = { "Name" : "route-${var.service}-dev-pri" }
+  database_route_table_tags    = { "Name" : "route-${var.service}-dev-db" }
+  intra_route_table_tags       = { "Name" : "route-${var.service}-dev-ep" }
+  elasticache_route_table_tags = { "Name" : "route-${var.service}-dev-elb" }
+  redshift_route_table_tags    = { "Name" : "route-${var.service}-dev-tgw" }
 
-  igw_tags = { "Name" : "igw-${var.service}-${var.environment}" }
+  igw_tags = { "Name" : "igw-${var.service}-dev" }
 
   # NAT Gateways - Outbound Communication
-  enable_nat_gateway = var.enable_nat_gateway
-  single_nat_gateway = var.single_nat_gateway
-  nat_gateway_tags   = { "Name" : "nat-${var.service}-${var.environment}" }
-  nat_eip_tags       = { "Name" : "eip-${var.service}-${var.environment}" }
+  enable_nat_gateway = var.enable_nat_gateway_dev
+  single_nat_gateway = var.single_nat_gateway_dev
+  nat_gateway_tags   = { "Name" : "nat-${var.service}-dev" }
+  nat_eip_tags       = { "Name" : "eip-${var.service}-dev" }
 
-  database_subnets                   = var.database_subnets
-  create_database_subnet_group       = var.create_database_subnet_group
-  create_database_subnet_route_table = var.create_database_subnet_route_table
-  database_subnet_group_name         = "rdssg-${var.service}-${var.environment}"
-  database_subnet_group_tags         = { "Name" = "rdssg-${var.service}-${var.environment}" }
+  create_database_subnet_group = true
+  database_subnet_group_name   = "rdssg-${var.service}-dev"
+  database_subnet_group_tags   = { "Name" = "rdssg-${var.service}-dev" }
 
   # DNS Parameters in VPC
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  # Flow logs
+  # enable_flow_log           = true
+  # flow_log_destination_type = "s3"
+  # flow_log_destination_arn  = module.s3_bucket.s3_bucket_arn
+  # vpc_flow_log_tags = local.tags
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -54,13 +70,56 @@ module "vpc" {
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
     # Tags subnets for Karpenter auto-discovery
-    "karpenter.sh/discovery" = "eks-${var.service}-${var.environment}"
+    "karpenter.sh/discovery" = "eks-${var.service}-dev"
   }
 
   # tags for the VPC
-  tags = local.tags
-
+  tags = {
+    owners      = local.owners
+    environment = "dev"
+    service     = local.service
+  }
 }
+
+# S3 Bucket
+# module "s3_bucket" {
+#   source  = "terraform-aws-modules/s3-bucket/aws"
+#   version = "~> 3.0"
+
+#   bucket        = local.s3_bucket_name
+#   policy        = data.aws_iam_policy_document.flow_log_s3.json
+#   force_destroy = true
+
+#   tags = local.tags
+# }
+
+# data "aws_iam_policy_document" "flow_log_s3" {
+#   statement {
+#     sid = "AWSLogDeliveryWrite"
+
+#     principals {
+#       type        = "Service"
+#       identifiers = ["delivery.logs.amazonaws.com"]
+#     }
+
+#     actions = ["s3:PutObject"]
+
+#     resources = ["arn:aws:s3:::${local.s3_bucket_name}/AWSLogs/*"]
+#   }
+
+#   statement {
+#     sid = "AWSLogDeliveryAclCheck"
+
+#     principals {
+#       type        = "Service"
+#       identifiers = ["delivery.logs.amazonaws.com"]
+#     }
+
+#     actions = ["s3:GetBucketAcl"]
+
+#     resources = ["arn:aws:s3:::${local.s3_bucket_name}"]
+#   }
+# }
 
 # Fully private cluster only
 # module "vpc_endpoints" {

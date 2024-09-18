@@ -1,76 +1,68 @@
-# VPC Name
-variable "vpc_name" {
-  description = "VPC Name"
-  type        = string
-  default     = "vpc"
-}
-
 # VPC CIDR Block
-variable "cidr" {
+variable "cidr_dev" {
   description = "VPC CIDR Block"
   type        = string
   default     = "10.0.0.0/16"
 }
 
 # VPC Public Subnets
-variable "public_subnets" {
+variable "public_subnets_dev" {
   description = "A list of public subnets inside the VPC"
   type        = list(string)
   default     = [""]
 }
 
 # VPC Private Subnets
-variable "private_subnets" {
+variable "private_subnets_dev" {
   description = "A list of private subnets inside the VPC"
   type        = list(string)
   default     = [""]
 }
 
 # VPC Infra Subnets
-variable "infra_subnets" {
+variable "endpoint_subnets_dev" {
   description = "A list of infra subnets inside the VPC"
   type        = list(string)
   default     = [""]
 }
 
 # VPC Database Subnets
-variable "database_subnets" {
+variable "database_subnets_dev" {
   description = "A list of database subnets inside the VPC"
   type        = list(string)
   default     = [""]
 }
 
-# VPC Create Database Subnet Group (True / False)
-variable "create_database_subnet_group" {
-  description = "VPC Create Database Subnet Group, Controls if database subnet group should be created"
-  type        = bool
-  default     = true
+# VPC ELB Subnets
+variable "elb_subnets_dev" {
+  description = "A list of ELB subnets inside the VPC"
+  type        = list(string)
+  default     = [""]
 }
 
-# VPC Create Database Subnet Route Table (True or False)
-variable "create_database_subnet_route_table" {
-  description = "VPC Create Database Subnet Route Table, Controls if separate route table for database should be created"
-  type        = bool
-  default     = true
+# VPC TGW Attachment Subnets
+variable "tgw_attach_subnets_dev" {
+  description = "A list of TGW Attachment subnets inside the VPC"
+  type        = list(string)
+  default     = [""]
 }
-
 
 # VPC Enable NAT Gateway (True or False)
-variable "enable_nat_gateway" {
+variable "enable_nat_gateway_dev" {
   description = "Should be true if you want to provision NAT Gateways for each of your private networks"
   type        = bool
   default     = false
 }
 
 # VPC Single NAT Gateway (True or False)
-variable "single_nat_gateway" {
+variable "single_nat_gateway_dev" {
   description = "Should be true if you want to provision a single shared NAT Gateway across all of your private networks"
   type        = bool
   default     = false
 }
 
 # Whether to create an VPC (True or False)
-variable "enable_vpc" {
+variable "enable_vpc_dev" {
   description = "Whether to create an VPC"
   type        = bool
   default     = true

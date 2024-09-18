@@ -64,15 +64,15 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      service_account_role_arn = try(module.ebs_csi_irsa_role.iam_role_arn, "")
     }
     aws-efs-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.efs_csi_irsa_role.iam_role_arn
+      service_account_role_arn = try(module.efs_csi_irsa_role.iam_role_arn, "")
     }
     aws-mountpoint-s3-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.mountpoint_s3_csi_irsa_role.iam_role_arn
+      service_account_role_arn = try(module.mountpoint_s3_csi_irsa_role.iam_role_arn, "")
     }
   }
 
@@ -185,6 +185,7 @@ module "eks" {
 
 module "efs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count  = var.enable_cluster ? 1 : 0
 
   role_name             = "efs-csi-driver"
   attach_efs_csi_policy = true
@@ -199,6 +200,7 @@ module "efs_csi_irsa_role" {
 
 module "ebs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count  = var.enable_cluster ? 1 : 0
 
   role_name             = "ebs-csi-controller"
   attach_ebs_csi_policy = true
@@ -212,6 +214,7 @@ module "ebs_csi_irsa_role" {
 }
 module "mountpoint_s3_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count  = var.enable_cluster ? 1 : 0
 
   role_name                       = "s3-csi-driver"
   attach_mountpoint_s3_csi_policy = true

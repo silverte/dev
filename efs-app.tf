@@ -5,6 +5,7 @@
 module "efs-app" {
   source = "terraform-aws-modules/efs/aws"
   create = var.enable_efs_app
+  count  = length(module.vpc.public_subnets) > 0 ? 1 : 0
 
   # File system
   name           = "efs-${var.service}-${var.environment}-${var.efs_app_name}"

@@ -6,6 +6,7 @@
 module "ec2_bastion" {
   source = "terraform-aws-modules/ec2-instance/aws"
   create = var.enable_ec2_bastion
+  count  = length(module.vpc.public_subnets) > 0 ? 1 : 0
 
   name = "ec2-${var.service}-${var.environment}-bastion"
 
@@ -51,7 +52,7 @@ module "ec2_bastion" {
   root_block_device = [
     {
       encrypted   = true
-      kms_key_id  = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id  = module.kms-ebs.key_arn
       volume_type = "gp3"
       #   throughput  = 200 # default: 125
       volume_size = var.ec2_bastion_root_volume_size
@@ -72,7 +73,7 @@ module "ec2_bastion" {
       volume_size = var.ec2_bastion_ebs_volume_size
       #   throughput  = 200 # default: 125
       encrypted  = true
-      kms_key_id = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id = module.kms-ebs.key_arn
       tags = merge(
         local.tags,
         {
