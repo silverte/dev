@@ -6,6 +6,7 @@ variable "region" {
   type        = string
   default     = "us-west-2"
 }
+
 # Service Name
 variable "service" {
   description = "Service Name for workloads"

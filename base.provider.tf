@@ -39,6 +39,30 @@ data "aws_availability_zones" "available" {}
 data "aws_ecrpublic_authorization_token" "token" {
   provider = aws.virginia
 }
+data "aws_vpc" "dev" {
+  filter {
+    name   = "tag:Name"
+    values = ["vpc-${var.service}-${var.environment}"]
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.dev.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["*pri*"] // private subnet에 대한 태그 패턴
+  }
+}
+
+data "aws_db_subnet_group" "existing" {
+  name = "rdssg-${var.service}-${var.environment}"
+}
+
+
 # management에서 생성된 KMS 키의 ARN 또는 동일 계정에서 생성한 Alias를 사용하여 Data Source를 정의
 data "aws_kms_key" "ebs" {
   count  = var.enable_kms_ebs == true ? 0 : 1

@@ -11,8 +11,8 @@ module "ec2_nexus" {
 
   ami                         = data.aws_ami.ec2_nexus.id
   instance_type               = var.ec2_nexus_instance_type
-  availability_zone           = element(module.vpc.azs, 0)
-  subnet_id                   = element(module.vpc.private_subnets, 0)
+  availability_zone           = element(local.azs, 0)
+  subnet_id                   = element(data.aws_subnets.private.ids, 0)
   vpc_security_group_ids      = [module.security_group_ec2_nexus.security_group_id]
   associate_public_ip_address = false
   disable_api_stop            = false
