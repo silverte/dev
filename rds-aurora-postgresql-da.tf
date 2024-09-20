@@ -24,7 +24,7 @@ module "aurora-postgresql-da" {
     }
   }
   vpc_id               = data.aws_vpc.dev.id
-  db_subnet_group_name = data.aws_db_subnet_group.existing.name
+  db_subnet_group_name = aws_db_subnet_group.rds-subnet-group.name
   publicly_accessible  = false
 
   security_group_name            = "scg-${var.service}-${var.environment}-${var.rds_aurora_da_cluster_name}"

@@ -54,14 +54,33 @@ data "aws_subnets" "private" {
 
   filter {
     name   = "tag:Name"
-    values = ["*pri*"] // private subnet에 대한 태그 패턴
+    values = ["*pri*"] # private subnet에 대한 태그 패턴
   }
 }
 
-data "aws_db_subnet_group" "existing" {
-  name = "rdssg-${var.service}-${var.environment}"
+data "aws_subnets" "database" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.dev.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["*db*"] # database subnet에 대한 태그 패턴
+  }
 }
 
+data "aws_subnets" "endpoint" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.dev.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["*ep*"] # endpoint subnet에 대한 태그 패턴
+  }
+}
 
 # management에서 생성된 KMS 키의 ARN 또는 동일 계정에서 생성한 Alias를 사용하여 Data Source를 정의
 data "aws_kms_key" "ebs" {

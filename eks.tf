@@ -79,8 +79,8 @@ module "eks" {
   vpc_id = module.vpc.vpc_id
   # subnet_ids               = module.vpc.private_subnets
   # Sandbox, Dev, Staging Only!!
-  subnet_ids               = [element(module.vpc.private_subnets, 0)]
-  control_plane_subnet_ids = module.vpc.intra_subnets
+  subnet_ids               = [element(data.aws_subnets.private.ids, 0)]
+  control_plane_subnet_ids = data.aws_subnets.endpoint.ids
 
   node_security_group_name            = "scg-${var.service}-${var.environment}-node"
   node_security_group_description     = "EKS node security group"
