@@ -2,7 +2,7 @@
 variable "enable_kms_ebs" {
   description = "Whether to create an KMS EBS"
   type        = bool
-  default     = true
+  default     = false
 }
 
 # Management Account KMS Key ARN

@@ -62,17 +62,17 @@ module "eks" {
         enableNetworkPolicy : "true",
       })
     }
-    # aws-ebs-csi-driver = {
-    #   most_recent              = true
-    #   service_account_role_arn = module.ebs_csi_irsa_role[0].iam_role_arn
-    # }
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = try(module.ebs_csi_irsa_role[0].iam_role_arn, "")
+    }
     aws-efs-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.efs_csi_irsa_role[0].iam_role_arn
+      service_account_role_arn = try(module.efs_csi_irsa_role[0].iam_role_arn, "")
     }
     aws-mountpoint-s3-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.mountpoint_s3_csi_irsa_role[0].iam_role_arn
+      service_account_role_arn = try(module.mountpoint_s3_csi_irsa_role[0].iam_role_arn, "")
     }
   }
 
@@ -203,26 +203,26 @@ module "efs_csi_irsa_role" {
   }
 }
 
-# module "ebs_csi_irsa_role" {
-#   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-#   count  = var.enable_cluster ? 1 : 0
+module "ebs_csi_irsa_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count  = var.enable_cluster ? 1 : 0
 
-#   role_name             = "role-${var.service}-${var.environment}-ebs-csi-controller"
-#   attach_ebs_csi_policy = true
-#   tags = merge(
-#     local.tags,
-#     {
-#       "Name" = "role-${var.service}-${var.environment}-ebs-csi-controller"
-#     }
-#   )
+  role_name             = "role-${var.service}-${var.environment}-ebs-csi-controller"
+  attach_ebs_csi_policy = true
+  tags = merge(
+    local.tags,
+    {
+      "Name" = "role-${var.service}-${var.environment}-ebs-csi-controller"
+    }
+  )
 
-#   oidc_providers = {
-#     ex = {
-#       provider_arn               = module.eks.oidc_provider_arn
-#       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
-#     }
-#   }
-# }
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+}
 
 module "mountpoint_s3_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
