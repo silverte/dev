@@ -29,6 +29,6 @@ variable "ec2_imdg_ami_filter_value" {
 # Whether to create an EC2 IMDG (True or False)
 variable "enable_ec2_imdg" {
   description = "Whether to create an EC2 IMDG"
-  type        = false
-  default     = true
+  type        = bool
+  default     = false
 }
