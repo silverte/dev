@@ -1,7 +1,10 @@
-# Create VPC using Terraform Module
+################################################################################
+# VPC Module
+# reference: https://github.com/terraform-aws-modules/terraform-aws-vpc
+################################################################################
 module "vpc" {
   source     = "terraform-aws-modules/vpc/aws"
-  version    = "5.8.1"
+  version    = "5.13.0"
   create_vpc = var.enable_vpc_dev
 
   # Details
@@ -58,10 +61,21 @@ module "vpc" {
   enable_dns_support   = true
 
   # Flow logs
-  # enable_flow_log           = true
-  # flow_log_destination_type = "s3"
-  # flow_log_destination_arn  = module.s3_bucket.s3_bucket_arn
-  # vpc_flow_log_tags = local.tags
+  enable_flow_log                       = var.enable_vpc_flow_log_dev
+  flow_log_destination_type             = "s3"
+  flow_log_destination_arn              = var.vpc_flow_log_s3_arn_dev
+  flow_log_max_aggregation_interval     = 600
+  vpc_flow_log_iam_role_name            = "role-${var.service}-${var.environment}-vpc-flow-log"
+  vpc_flow_log_iam_role_use_name_prefix = false
+  create_flow_log_cloudwatch_log_group  = true
+  create_flow_log_cloudwatch_iam_role   = true
+
+  vpc_flow_log_tags = merge(
+    local.tags,
+    {
+      "Name" = "vpc-${var.service}-dev-flow-logs"
+    }
+  )
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -122,42 +136,48 @@ module "vpc" {
 # }
 
 # Fully private cluster only
-# module "vpc_endpoints" {
-#   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-#   version = "~> 5.1"
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "~> 5.13.0"
+  create  = var.enable_vpc_dev
 
-#   vpc_id = module.vpc.vpc_id
+  vpc_id = module.vpc.vpc_id
 
-#   # Security group
-#   create_security_group      = true
-#   security_group_name_prefix = "${local.name}-vpc-endpoints-"
-#   security_group_description = "VPC endpoint security group"
-#   security_group_rules = {
-#     ingress_https = {
-#       description = "HTTPS from VPC"
-#       cidr_blocks = [module.vpc.vpc_cidr_block]
-#     }
-#   }
+  # Security group
+  create_security_group      = true
+  security_group_name        = "scg-${var.service}-${var.environment}-endpoint"
+  security_group_description = "VPC endpoint security group"
+  security_group_rules = {
+    ingress_https = {
+      description = "HTTPS from VPC"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+    }
+  }
+  security_group_tags = merge(
+    local.tags,
+    { "Name" = "scg-${var.service}-${var.environment}-endpoint"
+  })
 
-#   endpoints = merge({
-#     s3 = {
-#       service         = "s3"
-#       service_type    = "Gateway"
-#       route_table_ids = module.vpc.infra_route_table_ids
-#       tags = {
-#         Name = "${local.name}-s3"
-#       }
-#     }
-#     },
-#     { for service in toset(["autoscaling", "ecr.api", "ecr.dkr", "ec2", "ec2messages", "elasticloadbalancing", "sts", "kms", "logs", "ssm", "ssmmessages"]) :
-#       replace(service, ".", "_") =>
-#       {
-#         service             = service
-#         subnet_ids          = module.vpc.infra_subnet
-#         private_dns_enabled = true
-#         tags                = { Name = "${local.name}-${service}" }
-#       }
-#   })
-
-#   tags = local.tags
-# }
+  endpoints = merge({
+    s3 = {
+      service         = "s3"
+      service_type    = "Gateway"
+      route_table_ids = module.vpc.private_route_table_ids
+      tags = merge(
+        local.tags,
+      { "Name" = "ep-${var.service}-${var.environment}-gw-s3" })
+    }
+    },
+    #   { for service in toset(["autoscaling", "ecr.api", "ecr.dkr", "ec2", "ec2messages", "elasticloadbalancing", "sts", "kms", "logs", "ssm", "ssmmessages"]) :
+    #     replace(service, ".", "_") =>
+    #     {
+    #       service             = service
+    #       subnet_ids          = module.vpc.infra_subnets
+    #       private_dns_enabled = true
+    #       tags = merge(
+    #         local.tags,
+    #       { Name = "$ep-${var.service}-${var.environment}-${service}" })
+    #     }
+    # }
+  )
+}

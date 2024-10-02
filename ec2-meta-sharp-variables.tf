@@ -30,5 +30,5 @@ variable "ec2_meta_sharp_ami_filter_value" {
 variable "enable_ec2_meta_sharp" {
   description = "Whether to create an EC2 META#"
   type        = bool
-  default     = true
+  default     = false
 }

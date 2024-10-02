@@ -65,5 +65,5 @@ variable "rds_aurora_port" {
 variable "enable_aurora_postresql" {
   description = "Whether to create an Aurora DA PostreSQL"
   type        = bool
-  default     = true
+  default     = false
 }

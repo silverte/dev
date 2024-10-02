@@ -30,5 +30,5 @@ variable "ec2_nexus_ami_filter_value" {
 variable "enable_ec2_nexus" {
   description = "Whether to create an EC2 Nexus"
   type        = bool
-  default     = true
+  default     = false
 }

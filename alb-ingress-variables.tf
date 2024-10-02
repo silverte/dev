@@ -2,5 +2,5 @@
 variable "enable_alb" {
   description = "Whether to create an ALB"
   type        = bool
-  default     = true
+  default     = false
 }

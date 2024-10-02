@@ -9,5 +9,5 @@ variable "sqs_app_name" {
 variable "enable_sqs_app" {
   description = "Whether to create an SQS App"
   type        = bool
-  default     = true
+  default     = false
 }

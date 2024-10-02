@@ -65,5 +65,19 @@ variable "single_nat_gateway_dev" {
 variable "enable_vpc_dev" {
   description = "Whether to create an VPC"
   type        = bool
-  default     = true
+  default     = false
+}
+
+# VPC Flow Log (True or False)
+variable "enable_vpc_flow_log_dev" {
+  description = "Whether to create an VPC Flow Log"
+  type        = bool
+  default     = false
+}
+
+# S3 ARN for VPC Flow Log Destination
+variable "vpc_flow_log_s3_arn_dev" {
+  description = "S3 ARN for VPC Flow Log Destination"
+  type        = string
+  default     = ""
 }

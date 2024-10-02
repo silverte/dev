@@ -2,7 +2,7 @@
 variable "enable_ecr_app" {
   description = "Whether to create an ECR App"
   type        = bool
-  default     = true
+  default     = false
 }
 
 # ECR Name

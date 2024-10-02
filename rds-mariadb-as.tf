@@ -38,7 +38,7 @@ module "rds-maria-as" {
 
   multi_az               = false
   availability_zone      = element(local.azs, 0)
-  db_subnet_group_name   = aws_db_subnet_group.rds-subnet-group.name
+  db_subnet_group_name   = try(aws_db_subnet_group.rds-subnet-group[0].name, "")
   subnet_ids             = [element(data.aws_subnets.database.ids, 0)]
   vpc_security_group_ids = [module.security_group_rds_maria_as.security_group_id]
 
