@@ -4,7 +4,7 @@
 ################################################################################
 module "sqs_app" {
   source = "terraform-aws-modules/sqs/aws"
-  create = var.enable_sqs_app
+  create = var.create_sqs_app
 
   name       = "sqs-${var.service}-${var.environment}-${var.sqs_app_name}"
   fifo_queue = true

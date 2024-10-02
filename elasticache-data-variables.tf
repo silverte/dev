@@ -34,7 +34,7 @@ variable "elasticache_cluster_port" {
 }
 
 # Whether to create an ElastiCache Data (True or False)
-variable "enable_elasticache_data" {
+variable "create_elasticache_data" {
   description = "Whether to create an ElastiCache Data"
   type        = bool
   default     = false

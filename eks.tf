@@ -7,7 +7,7 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.24"
-  create  = var.enable_cluster
+  create  = var.create_eks_cluster
 
   # TO-DO 클러스터 Secret 암호화 적용 확인
   create_kms_key                = false
@@ -24,10 +24,10 @@ module "eks" {
   enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
   cluster_endpoint_public_access           = var.cluster_endpoint_public_access
   cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"]
-  cluster_security_group_name              = "scg-${var.service}-${var.environment}-cluster"
+  cluster_security_group_name              = "scg-${var.service}-${var.environment}-eks-cluster"
   cluster_security_group_description       = "EKS cluster security group"
   cluster_security_group_use_name_prefix   = false
-  cluster_security_group_tags              = { "Name" = "scg-${var.service}-${var.environment}-cluster" }
+  cluster_security_group_tags              = { "Name" = "scg-${var.service}-${var.environment}-eks-cluster" }
 
   cluster_addons = {
     coredns = {
@@ -76,7 +76,7 @@ module "eks" {
     }
   }
 
-  vpc_id = data.aws_vpc.dev.id
+  vpc_id = data.aws_vpc.vpc.id
   # subnet_ids               = module.vpc.private_subnets
   # Sandbox, Dev, Staging Only!!
   subnet_ids               = [element(data.aws_subnets.private.ids, 0)]
@@ -184,7 +184,7 @@ module "eks" {
 
 module "efs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  count  = var.enable_cluster ? 1 : 0
+  count  = var.create_eks_cluster ? 1 : 0
 
   role_name             = "role-${var.service}-${var.environment}-efs-csi-driver"
   attach_efs_csi_policy = true
@@ -205,7 +205,7 @@ module "efs_csi_irsa_role" {
 
 module "ebs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  count  = var.enable_cluster ? 1 : 0
+  count  = var.create_eks_cluster ? 1 : 0
 
   role_name             = "role-${var.service}-${var.environment}-ebs-csi-controller"
   attach_ebs_csi_policy = true
@@ -226,7 +226,7 @@ module "ebs_csi_irsa_role" {
 
 module "mountpoint_s3_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  count  = var.enable_cluster ? 1 : 0
+  count  = var.create_eks_cluster ? 1 : 0
 
   role_name = "role-${var.service}-${var.environment}-s3-csi-driver"
   tags = merge(

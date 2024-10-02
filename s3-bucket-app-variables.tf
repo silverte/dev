@@ -6,7 +6,7 @@ variable "s3_bucket_app_name" {
 }
 
 # Whether to create an S3 Bucket App (True or False)
-variable "enable_s3_bucket_app" {
+variable "create_s3_bucket_app" {
   description = "Whether to create an S3 Bucket App"
   type        = bool
   default     = false

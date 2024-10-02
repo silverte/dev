@@ -5,9 +5,9 @@
 
 module "rds-oracle-to" {
   source                    = "terraform-aws-modules/rds/aws"
-  create_db_instance        = var.enable_oracle_to
-  create_db_parameter_group = var.enable_oracle_to
-  create_db_option_group    = var.enable_oracle_to
+  create_db_instance        = var.create_oracle_to
+  create_db_parameter_group = var.create_oracle_to
+  create_db_option_group    = var.create_oracle_to
 
   identifier = "rds-${var.service}-${var.environment}-${var.rds_oracle_to_name}"
 
@@ -27,7 +27,7 @@ module "rds-oracle-to" {
   storage_encrypted = true
   storage_type      = "gp3"
   # max_allocated_storage = var.rds_oracle_to_allocated_storage * 1.1
-  kms_key_id        = var.enable_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
+  kms_key_id        = var.create_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
   allocated_storage = var.rds_oracle_to_allocated_storage
 
   # Make sure that database name is capitalized, otherwise RDS will try to recreate RDS instance every time
@@ -48,7 +48,7 @@ module "rds-oracle-to" {
   # enabled_cloudwatch_logs_exports = ["alert", "audit"]
   # create_cloudwatch_log_group     = true
 
-  backup_retention_period    = 14
+  backup_retention_period    = 7
   skip_final_snapshot        = true
   auto_minor_version_upgrade = false
   deletion_protection        = true
@@ -109,12 +109,12 @@ module "rds-oracle-to" {
 module "security_group_oracle_to" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
-  create  = var.enable_oracle_to
+  create  = var.create_oracle_to
 
   name            = "scg-${var.service}-${var.environment}-${var.rds_oracle_to_name}"
   use_name_prefix = false
   description     = "Oracle security group"
-  vpc_id          = data.aws_vpc.dev.id
+  vpc_id          = data.aws_vpc.vpc.id
 
   # ingress
   ingress_with_cidr_blocks = [

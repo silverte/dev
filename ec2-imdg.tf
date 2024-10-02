@@ -5,7 +5,7 @@
 
 module "ec2_imdg" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  create = var.enable_ec2_imdg
+  create = var.create_ec2_imdg
 
   name = "ec2-${var.service}-${var.environment}-imdg"
 
@@ -17,39 +17,29 @@ module "ec2_imdg" {
   associate_public_ip_address = false
   disable_api_stop            = false
   disable_api_termination     = true
-  # key_name                    = module.key_pair_imdg.key_pair_name
-
-  # create_iam_instance_profile = true
-  # iam_role_description        = "IAM role for EC2 instance"
-  # iam_role_policies = {
-  #   AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
-  # }
-
   # https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/hibernating-prerequisites.html#hibernation-prereqs-supported-amis
   hibernation                 = false
   user_data_base64            = base64encode(file("./user_data.sh"))
   user_data_replace_on_change = true
 
   metadata_options = {
-    http_endpoint               = "enabled"
+    http_endpoint               = "created"
     http_tokens                 = "required"
     http_put_response_hop_limit = 8
-    instance_metadata_tags      = "enabled"
+    instance_metadata_tags      = "created"
   }
 
   enable_volume_tags = false
   root_block_device = [
     {
       encrypted   = true
-      kms_key_id  = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id  = var.create_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
       volume_type = "gp3"
-      #   throughput  = 200 # default: 125
       volume_size = var.ec2_imdg_root_volume_size
       tags = merge(
         local.tags,
         {
-          "Name"       = "ebs-${var.service}-${var.environment}-imdg-root"
-          "MountPoint" = "/data"
+          "Name" = "ebs-${var.service}-${var.environment}-imdg-root"
         },
       )
     },
@@ -60,14 +50,12 @@ module "ec2_imdg" {
       device_name = "/dev/sdf"
       volume_type = "gp3"
       volume_size = var.ec2_imdg_ebs_volume_size
-      #   throughput  = 200 # default: 125
       encrypted  = true
-      kms_key_id = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id = var.create_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
       tags = merge(
         local.tags,
         {
-          "Name"       = "ebs-${var.service}-${var.environment}-imdg-data"
-          "MountPoint" = "/data"
+          "Name" = "ebs-${var.service}-${var.environment}-imdg-data01"
         },
       )
     }
@@ -84,12 +72,12 @@ module "ec2_imdg" {
 module "security_group_ec2_imdg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
-  create  = var.enable_ec2_imdg
+  create  = var.create_ec2_imdg
 
   name            = "scg-${var.service}-${var.environment}-imdg"
   use_name_prefix = false
   description     = "Security group for EC2 Nexus"
-  vpc_id          = module.vpc.vpc_id
+  vpc_id          = data.aws_vpc.vpc.id
 
   # ingress_cidr_blocks = ["0.0.0.0/0"]
   # ingress_rules       = ["http-80-tcp", "all-icmp"]

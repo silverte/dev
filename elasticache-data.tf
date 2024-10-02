@@ -5,7 +5,7 @@
 
 module "elasticache-data" {
   source = "terraform-aws-modules/elasticache/aws"
-  create = var.enable_elasticache_data
+  create = var.create_elasticache_data
 
   cluster_id                 = "ec-${var.service}-${var.environment}-${var.elasticache_cluster_name}"
   create_cluster             = true
@@ -23,7 +23,7 @@ module "elasticache-data" {
   auto_minor_version_upgrade = false
 
   # Security Group
-  vpc_id                         = module.vpc.vpc_id
+  vpc_id                         = data.aws_vpc.vpc.id
   security_group_name            = "scg-${var.service}-${var.environment}-${var.elasticache_cluster_name}"
   security_group_use_name_prefix = false
   security_group_description     = "elasticache for data"
@@ -33,14 +33,14 @@ module "elasticache-data" {
       "Name" = "scg-${var.service}-${var.environment}-${var.elasticache_cluster_name}"
     }
   )
-  security_group_rules = {
-    ingress_vpc = {
-      # Default type is `ingress`
-      # Default port is based on the default engine port
-      description = "VPC trafsfic"
-      cidr_ipv4   = module.vpc.vpc_cidr_block
-    }
-  }
+  # security_group_rules = {
+  #   ingress_vpc = {
+  #     # Default type is `ingress`
+  #     # Default port is based on the default engine port
+  #     description = "VPC trafsfic"
+  #     cidr_ipv4   = module.vpc.vpc_cidr_block
+  #   }
+  # }
 
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
@@ -49,10 +49,10 @@ module "elasticache-data" {
   # Subnet Group
   subnet_group_name        = "ecsg-${var.service}-${var.environment}"
   subnet_group_description = "elasticache subnet group"
-  subnet_ids               = module.vpc.private_subnets
+  subnet_ids               = data.aws_subnets.private.ids
   # availability_zone = module.vpc.azs
   # Sandbox, Dev, Stage Only
-  availability_zone = element(module.vpc.azs, 0)
+  availability_zone = element(local.azs, 0)
 
   # Parameter Group
   create_parameter_group      = true

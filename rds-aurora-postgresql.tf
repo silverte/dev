@@ -4,9 +4,9 @@
 ################################################################################
 module "aurora-postgresql" {
   source                            = "terraform-aws-modules/rds-aurora/aws"
-  create                            = var.enable_aurora_postresql
-  create_db_cluster_parameter_group = var.enable_aurora_postresql
-  create_security_group             = var.enable_aurora_postresql
+  create                            = var.create_aurora_postresql
+  create_db_cluster_parameter_group = var.create_aurora_postresql
+  create_security_group             = var.create_aurora_postresql
 
   name            = "rds-${var.service}-${var.environment}-${var.rds_aurora_cluster_name}"
   engine          = var.rds_aurora_cluster_engine
@@ -19,11 +19,11 @@ module "aurora-postgresql" {
     1 = {
       instance_class      = var.rds_aurora_cluster_instance_class
       publicly_accessible = false
-      availability_zone   = element(module.vpc.azs, 0)
+      availability_zone   = element(local.azs, 0)
       # db_parameter_group_name = "default.aurora-postgresql14"
     }
   }
-  vpc_id               = data.aws_vpc.dev.id
+  vpc_id               = data.aws_vpc.vpc.id
   db_subnet_group_name = try(aws_db_subnet_group.rds-subnet-group[0].name, "")
   publicly_accessible  = false
 
@@ -36,14 +36,9 @@ module "aurora-postgresql" {
       "Name" = "scg-${var.service}-${var.rds_aurora_cluster_name}-${var.environment}"
     }
   )
-  security_group_rules = {
-    vpc_ingress = {
-      # cidr_blocks = module.vpc.private_subnets_cidr_blocks
-    }
-  }
   storage_encrypted                          = true
   storage_type                               = "aurora"
-  kms_key_id                                 = var.enable_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
+  kms_key_id                                 = var.create_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
   apply_immediately                          = true
   skip_final_snapshot                        = true
   auto_minor_version_upgrade                 = false

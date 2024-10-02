@@ -5,8 +5,8 @@
 
 module "rds-postgresql-da" {
   source                    = "terraform-aws-modules/rds/aws"
-  create_db_instance        = var.enable_postgresql_da
-  create_db_parameter_group = var.enable_postgresql_da
+  create_db_instance        = var.create_postgresql_da
+  create_db_parameter_group = var.create_postgresql_da
   # PostgreSQL은 option group을 사용하지 않음(2024.08.22)
   create_db_option_group = false
 
@@ -25,7 +25,7 @@ module "rds-postgresql-da" {
   storage_type      = "gp3"
   # max_allocated_storage = var.rds_postgresql_da_allocated_storage * 1.1
 
-  kms_key_id        = var.enable_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
+  kms_key_id        = var.create_kms_rds == true ? module.kms-rds.key_arn : data.aws_kms_key.rds[0].arn
   allocated_storage = var.rds_postgresql_da_allocated_storage
 
   # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
@@ -47,7 +47,7 @@ module "rds-postgresql-da" {
   #   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
   #   create_cloudwatch_log_group     = true
 
-  backup_retention_period    = 14
+  backup_retention_period    = 7
   skip_final_snapshot        = true
   auto_minor_version_upgrade = false
   deletion_protection        = true
@@ -124,12 +124,12 @@ module "rds-postgresql-da" {
 module "security_group_rds_postgresql_da" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
-  create  = var.enable_postgresql_da
+  create  = var.create_postgresql_da
 
   name            = "scg-${var.service}-${var.environment}-${var.rds_postgresql_da_name}"
   use_name_prefix = false
   description     = "PostgreSQL security group"
-  vpc_id          = data.aws_vpc.dev.id
+  vpc_id          = data.aws_vpc.vpc.id
   # ingress
   ingress_with_cidr_blocks = [
     {

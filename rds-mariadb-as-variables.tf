@@ -76,7 +76,7 @@ variable "rds_mariadb_as_port" {
 }
 
 # Whether to create an MariaDB As-Is (True or False)
-variable "enable_mariadb_as" {
+variable "create_mariadb_as" {
   description = "Whether to create an MariaDB As-Is"
   type        = bool
   default     = false

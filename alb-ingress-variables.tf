@@ -1,5 +1,5 @@
 # Whether to create an ALB ingress (True or False)
-variable "enable_alb" {
+variable "create_alb" {
   description = "Whether to create an ALB"
   type        = bool
   default     = false

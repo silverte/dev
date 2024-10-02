@@ -4,7 +4,7 @@
 ################################################################################
 module "ecr-app" {
   source = "terraform-aws-modules/ecr/aws"
-  create = var.enable_ecr_app
+  create = var.create_ecr_app
 
   repository_name = "ecr-${var.service}-${var.environment}-${var.ecr_app_name}"
 

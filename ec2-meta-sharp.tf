@@ -5,7 +5,7 @@
 
 module "ec2_meta_sharp" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  create = var.enable_ec2_meta_sharp
+  create = var.create_ec2_meta_sharp
 
   name = "ec2-${var.service}-${var.environment}-meta"
 
@@ -17,14 +17,6 @@ module "ec2_meta_sharp" {
   associate_public_ip_address = false
   disable_api_stop            = false
   disable_api_termination     = true
-  # key_name                    = module.key_pair_meta_sharp.key_pair_name
-
-  # create_iam_instance_profile = true
-  # iam_role_description        = "IAM role for EC2 instance"
-  # iam_role_policies = {
-  #   AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
-  # }
-
   # https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/hibernating-prerequisites.html#hibernation-prereqs-supported-amis
   hibernation                 = false
   user_data_base64            = base64encode(file("./user_data.sh"))
@@ -41,15 +33,14 @@ module "ec2_meta_sharp" {
   root_block_device = [
     {
       encrypted   = true
-      kms_key_id  = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id  = var.create_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
       volume_type = "gp3"
       #   throughput  = 200 # default: 125
       volume_size = var.ec2_meta_sharp_root_volume_size
       tags = merge(
         local.tags,
         {
-          "Name"       = "ebs-${var.service}-${var.environment}-meta-root"
-          "MountPoint" = "/data"
+          "Name" = "ebs-${var.service}-${var.environment}-meta-root"
         },
       )
     },
@@ -62,12 +53,11 @@ module "ec2_meta_sharp" {
       volume_size = var.ec2_meta_sharp_ebs_volume_size
       #   throughput  = 200 # default: 125
       encrypted  = true
-      kms_key_id = var.enable_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
+      kms_key_id = var.create_kms_ebs == true ? module.kms-ebs.key_arn : data.aws_kms_key.ebs[0].arn
       tags = merge(
         local.tags,
         {
-          "Name"       = "ebs-${var.service}-${var.environment}-meta-data"
-          "MountPoint" = "/data"
+          "Name" = "ebs-${var.service}-${var.environment}-meta-data01"
         },
       )
     }
@@ -84,12 +74,12 @@ module "ec2_meta_sharp" {
 module "security_group_ec2_meta_sharp" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
-  create  = var.enable_ec2_meta_sharp
+  create  = var.create_ec2_meta_sharp
 
   name            = "scg-${var.service}-${var.environment}-meta"
   use_name_prefix = false
   description     = "Security group for EC2 Nexus"
-  vpc_id          = module.vpc.vpc_id
+  vpc_id          = data.aws_vpc.vpc.id
 
   # ingress_cidr_blocks = ["0.0.0.0/0"]
   # ingress_rules       = ["http-80-tcp", "all-icmp"]

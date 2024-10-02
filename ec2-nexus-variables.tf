@@ -27,7 +27,7 @@ variable "ec2_nexus_ami_filter_value" {
 }
 
 # Whether to create an EC2 Nexus (True or False)
-variable "enable_ec2_nexus" {
+variable "create_ec2_nexus" {
   description = "Whether to create an EC2 Nexus"
   type        = bool
   default     = false

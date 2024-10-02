@@ -39,7 +39,7 @@ data "aws_availability_zones" "available" {}
 data "aws_ecrpublic_authorization_token" "token" {
   provider = aws.virginia
 }
-data "aws_vpc" "dev" {
+data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
     values = ["vpc-${var.service}-${var.environment}"]
@@ -49,7 +49,7 @@ data "aws_vpc" "dev" {
 data "aws_subnets" "private" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.dev.id]
+    values = [data.aws_vpc.vpc.id]
   }
 
   filter {
@@ -61,7 +61,7 @@ data "aws_subnets" "private" {
 data "aws_subnets" "database" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.dev.id]
+    values = [data.aws_vpc.vpc.id]
   }
 
   filter {
@@ -73,7 +73,7 @@ data "aws_subnets" "database" {
 data "aws_subnets" "endpoint" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.dev.id]
+    values = [data.aws_vpc.vpc.id]
   }
 
   filter {
@@ -84,10 +84,10 @@ data "aws_subnets" "endpoint" {
 
 # management에서 생성된 KMS 키의 ARN 또는 동일 계정에서 생성한 Alias를 사용하여 Data Source를 정의
 data "aws_kms_key" "ebs" {
-  count  = var.enable_kms_ebs == true ? 0 : 1
-  key_id = var.enable_kms_ebs == true ? "alias/ebs" : var.management_ebs_key_arn
+  count  = var.create_kms_ebs == true ? 0 : 1
+  key_id = var.create_kms_ebs == true ? "alias/ebs" : var.management_ebs_key_arn
 }
 data "aws_kms_key" "rds" {
-  count  = var.enable_kms_rds == true ? 0 : 1
-  key_id = var.enable_kms_ebs == true ? "alias/rds" : var.management_rds_key_arn
+  count  = var.create_kms_rds == true ? 0 : 1
+  key_id = var.create_kms_ebs == true ? "alias/rds" : var.management_rds_key_arn
 }

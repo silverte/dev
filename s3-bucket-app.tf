@@ -5,7 +5,7 @@
 ################################################################################
 module "s3_bucket_app" {
   source        = "terraform-aws-modules/s3-bucket/aws"
-  create_bucket = var.enable_s3_bucket_app
+  create_bucket = var.create_s3_bucket_app
 
   bucket        = "s3-${var.service}-${var.environment}-${var.s3_bucket_app_name}"
   force_destroy = true

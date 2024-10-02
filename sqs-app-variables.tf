@@ -6,7 +6,7 @@ variable "sqs_app_name" {
 }
 
 # Whether to create an SQS App (True or False)
-variable "enable_sqs_app" {
+variable "create_sqs_app" {
   description = "Whether to create an SQS App"
   type        = bool
   default     = false

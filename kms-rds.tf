@@ -4,7 +4,7 @@
 ################################################################################
 module "kms-rds" {
   source = "terraform-aws-modules/kms/aws"
-  create = var.enable_kms_rds
+  create = var.create_kms_rds
 
   description             = "RDS customer managed key"
   deletion_window_in_days = 30
