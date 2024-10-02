@@ -9,7 +9,7 @@ module "iam_assumable_role_admin" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-administrator"
+    "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   # trusted_role_services = [
@@ -42,7 +42,7 @@ module "iam_assumable_role_poweruser" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-powerUser"
+    "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   create_role             = true
@@ -71,7 +71,7 @@ module "iam_assumable_role_databaseadmin" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-databaseAdmin"
+    "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   create_role             = true
@@ -100,7 +100,7 @@ module "iam_assumable_role_systemadmin" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-systemAdmin"
+    "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   create_role             = true
@@ -119,7 +119,7 @@ module "iam_assumable_role_systemadmin" {
 }
 
 #################################################################################
-# IAM assumable role for systemAdmin
+# IAM assumable role for networkAdmin
 #################################################################################
 module "iam_assumable_role_networkadmin" {
   source = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
@@ -129,7 +129,7 @@ module "iam_assumable_role_networkadmin" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-networkAdmin"
+    "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   create_role             = true
@@ -158,7 +158,7 @@ module "iam_assumable_role_viewonly" {
   allow_self_assume_role = true
 
   trusted_role_arns = [
-    "arn:aws:iam::${var.iam_management_account_id}:group/group-${var.service}-management-viewOnly"
+   "arn:aws:iam::${var.iam_management_account_id}:root"
   ]
 
   create_role             = true
