@@ -10,5 +10,8 @@ locals {
     owners      = local.owners
     environment = local.environment
     service     = local.service
+    cz-project  = local.service
+    cz-owner    = local.owners
+    cz-stage    = local.environment
   }
 }
